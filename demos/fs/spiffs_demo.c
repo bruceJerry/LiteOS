@@ -50,8 +50,7 @@ void spiffs_demo(void)
     int ret = 0;
 
     ret = stm32f4xx_spiffs_init(0);
-    if(ret == LOS_NOK)
-    {
+    if(ret == LOS_NOK) {
         FS_LOG_ERR("stm32f4xx_spiffs_init failed.");
         return;
     }

@@ -39,6 +39,7 @@
 static char s_ucaWriteBuffer[] = "hello world";
 static char s_ucaReadBuffer[100];
 
+#define FS_SPIFFS
 
 void fs_demo(void)
 {

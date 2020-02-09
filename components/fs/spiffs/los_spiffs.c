@@ -405,15 +405,12 @@ int spiffs_mount (const char *path, u32_t phys_addr, u32_t phys_size,
     fds   = (u8_t *)   malloc (LOS_SPIFFS_FD_SIZE);
     cache = (u8_t *)   malloc (LOS_SPIFFS_CACHE_SIZE);
 
-    if ((fs == NULL) || (wbuf == NULL) || (fds == NULL) || (cache == NULL))
-    {
-        PRINT_ERR ("fail to malloc memory in SPIFFS, <malloc.c> is needed,"
-                   "make sure it is added\n");
+    if ((fs == NULL) || (wbuf == NULL) || (fds == NULL) || (cache == NULL)) {
+        PRINT_ERR ("fail to malloc memory in SPIFFS, <malloc.c> is needed," "make sure it is added\n");
         goto err_free;
     }
 
     memset (fs, 0, sizeof (spiffs));
-
     c.hal_read_f       = spi_rd;
     c.hal_write_f      = spi_wr;
     c.hal_erase_f      = spi_er;
@@ -424,29 +421,21 @@ int spiffs_mount (const char *path, u32_t phys_addr, u32_t phys_size,
     c.phys_size        = phys_size;
     c.fh_ix_offset     = TEST_SPIFFS_FILEHDL_OFFSET;
 
-    ret = SPIFFS_mount (fs, &c, wbuf, fds, LOS_SPIFFS_FD_SIZE, cache,
-                        LOS_SPIFFS_CACHE_SIZE, NULL);
-
-    if (ret == SPIFFS_ERR_NOT_A_FS)
-    {
+    ret = SPIFFS_mount(fs, &c, wbuf, fds, LOS_SPIFFS_FD_SIZE, cache, LOS_SPIFFS_CACHE_SIZE, NULL);
+    if (ret == SPIFFS_ERR_NOT_A_FS) {
+        PRINT_ERR("------\n");
         PRINT_INFO ("formating fs...\n");
-
         SPIFFS_format (fs);
-
-        ret = SPIFFS_mount (fs, &c, wbuf, fds, LOS_SPIFFS_FD_SIZE, cache,
-                            LOS_SPIFFS_CACHE_SIZE, NULL);
+        ret = SPIFFS_mount(fs, &c, wbuf, fds, LOS_SPIFFS_FD_SIZE, cache, LOS_SPIFFS_CACHE_SIZE, NULL);
     }
 
-    if (ret != SPIFFS_OK)
-    {
+    if (ret != SPIFFS_OK) {
         PRINT_ERR ("format fail!\n");
         goto err_unmount;
     }
 
     ret = los_fs_mount ("spiffs", path, fs);
-
-    if (ret == LOS_OK)
-    {
+    if (ret == LOS_OK) {
         fs_ptr = fs;
         wbuf_ptr = wbuf;
         fds_ptr = fds;
@@ -505,24 +494,17 @@ int spiffs_init (void)
 {
     static int spiffs_inited = FALSE;
 
-    if (spiffs_inited)
-    {
+    if (spiffs_inited) {
         return LOS_OK;
     }
-
-    if (los_vfs_init () != LOS_OK)
-    {
+    if (los_vfs_init() != LOS_OK) {
         return LOS_NOK;
     }
-
-    if (los_fs_register (&spiffs_fs) != LOS_OK)
-    {
+    if (los_fs_register(&spiffs_fs) != LOS_OK) {
         PRINT_ERR ("failed to register fs!\n");
         return LOS_NOK;
     }
-
     spiffs_inited = TRUE;
-
     PRINT_INFO ("register spiffs done!\n");
 
     return LOS_OK;

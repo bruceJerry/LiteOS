@@ -36,29 +36,29 @@
 #include "stm32f4xx.h"
 #include "stm32f4xx_hal_spi.h"
 
-#ifdef HAL_SPI_MODULE_ENABLED
+#ifdef HAL_SPI_MODULE_ENABLED // 3字节地址模式
 
 #define SPI_FLASH_PAGESIZE                         256
 #define SPI_FLASH_SECTOR                           4096
-#define SPI_FLASH_ID                               0xEF4018
-#define SPI_FLASH_TOTAL_SIZE                       0x10000000
+#define SPI_FLASH_ID                               0xEF18 //0xEF4018
+#define SPI_FLASH_TOTAL_SIZE                       0x2000000
 
-#define SPI_FLASH_WriteEnable                      0x06
-#define SPI_FLASH_WriteDisable                     0x04
-#define SPI_FLASH_ReadStatusReg                    0x05
-#define SPI_FLASH_WriteStatusReg                   0x01
-#define SPI_FLASH_ReadData                         0x03
+#define SPI_FLASH_WriteEnable                      0x06 //
+#define SPI_FLASH_WriteDisable                     0x04 //
+#define SPI_FLASH_ReadStatusReg                    0x05 //
+#define SPI_FLASH_WriteStatusReg                   0x01 //
+#define SPI_FLASH_ReadData                         0x03 //
 #define SPI_FLASH_FastReadData                     0x0B
 #define SPI_FLASH_FastReadDual                     0x3B
 #define SPI_FLASH_PageProgram                      0x02
 #define SPI_FLASH_BlockErase                       0xD8
 #define SPI_FLASH_SectorErase                      0x20
-#define SPI_FLASH_ChipErase                        0xC7
+#define SPI_FLASH_ChipErase                        0xC7 //
 #define SPI_FLASH_PowerDown                        0xB9
 #define SPI_FLASH_ReleasePowerDown                 0xAB
 #define SPI_FLASH_DeviceID                         0xAB
-#define SPI_FLASH_ManufactDeviceID                 0x90
-#define SPI_FLASH_JedecDeviceID                    0x9F
+#define SPI_FLASH_ManufactDeviceID                 0x90 //
+#define SPI_FLASH_JedecDeviceID                    0x9F //
 #define SPI_FLASH_WIP_FLAG                         0x01
 #define SPI_FLASH_DUMMY_BYTE                       0xFF
 
