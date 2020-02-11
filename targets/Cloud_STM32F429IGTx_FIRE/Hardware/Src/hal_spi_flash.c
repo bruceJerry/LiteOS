@@ -36,68 +36,69 @@
 #include "stm32f4xx.h"
 #include "stm32f4xx_hal_spi.h"
 
-#ifdef HAL_SPI_MODULE_ENABLED // 3字节地址模式
+#ifdef HAL_SPI_MODULE_ENABLED // 3字节地址模式，256应该是4地址模式，但是可以通过->DEAR(read extended address register)和WREAR(write entended address register)来使用3线地址模式
 
-#define SPI_FLASH_PAGESIZE                         256
-#define SPI_FLASH_SECTOR                           4096
-#define SPI_FLASH_ID                               0xEF18 //0xEF4018
-#define SPI_FLASH_TOTAL_SIZE                       0x2000000
+#define SPI_FLASH_PAGESIZE 256
+#define SPI_FLASH_SECTOR 4096
+#define SPI_FLASH_ID 0xEF18 //0xEF4018
+#define SPI_FLASH_TOTAL_SIZE 0x2000000
 
-#define SPI_FLASH_WriteEnable                      0x06 //
-#define SPI_FLASH_WriteDisable                     0x04 //
-#define SPI_FLASH_ReadStatusReg                    0x05 //
-#define SPI_FLASH_WriteStatusReg                   0x01 //
-#define SPI_FLASH_ReadData                         0x03 //
-#define SPI_FLASH_FastReadData                     0x0B
-#define SPI_FLASH_FastReadDual                     0x3B
-#define SPI_FLASH_PageProgram                      0x02
-#define SPI_FLASH_BlockErase                       0xD8
-#define SPI_FLASH_SectorErase                      0x20
-#define SPI_FLASH_ChipErase                        0xC7 //
-#define SPI_FLASH_PowerDown                        0xB9
-#define SPI_FLASH_ReleasePowerDown                 0xAB
-#define SPI_FLASH_DeviceID                         0xAB
-#define SPI_FLASH_ManufactDeviceID                 0x90 //
-#define SPI_FLASH_JedecDeviceID                    0x9F //
-#define SPI_FLASH_WIP_FLAG                         0x01
-#define SPI_FLASH_DUMMY_BYTE                       0xFF
+#define SPI_FLASH_WriteEnable 0x06    //
+#define SPI_FLASH_WriteDisable 0x04   //
+#define SPI_FLASH_ReadStatusReg 0x05  //
+#define SPI_FLASH_WriteStatusReg 0x01 //
+#define SPI_FLASH_ReadData 0x03       //
+#define SPI_FLASH_FastReadData 0x0B
+#define SPI_FLASH_FastReadDual 0x3B
+#define SPI_FLASH_PageProgram 0x02
+#define SPI_FLASH_BlockErase 0xD8
+#define SPI_FLASH_SectorErase 0x20
+#define SPI_FLASH_ChipErase 0xC7 //
+#define SPI_FLASH_PowerDown 0xB9
+#define SPI_FLASH_ReleasePowerDown 0xAB
+#define SPI_FLASH_DeviceID 0xAB
+#define SPI_FLASH_ManufactDeviceID 0x90 //
+#define SPI_FLASH_JedecDeviceID 0x9F    //
+#define SPI_FLASH_WIP_FLAG 0x01
+#define SPI_FLASH_DUMMY_BYTE 0xFF
 
-#define SPI_FLASH_PERIPHERAL                       SPI5
-#define SPI_FLASH_ALTERNATE                        GPIO_AF5_SPI5
-#define SPI_FLASH_GPIO_PORT                        GPIOF
-#define SPI_FLASH_SCK_PIN                          GPIO_PIN_7
-#define SPI_FLASH_MISO_PIN                         GPIO_PIN_8
-#define SPI_FLASH_MOSI_PIN                         GPIO_PIN_9
-#define SPI_FLASH_CS_PORT                          GPIOF
-#define SPI_FLASH_CS_PIN                           GPIO_PIN_6
+#define SPI_FLASH_PERIPHERAL SPI5
+#define SPI_FLASH_ALTERNATE GPIO_AF5_SPI5
+#define SPI_FLASH_GPIO_PORT GPIOF
+#define SPI_FLASH_SCK_PIN GPIO_PIN_7
+#define SPI_FLASH_MISO_PIN GPIO_PIN_8
+#define SPI_FLASH_MOSI_PIN GPIO_PIN_9
+#define SPI_FLASH_CS_PORT GPIOF
+#define SPI_FLASH_CS_PIN GPIO_PIN_6
 
-#define CHOOSE_BIT_16                              16
-#define CHOOSE_BIT_8                               8
+#define CHOOSE_BIT_24 24
+#define CHOOSE_BIT_16 16
+#define CHOOSE_BIT_8 8
 
-#define SPI_FLASH_ENABLE(__HANDLE__)               __HAL_SPI_ENABLE(__HANDLE__)
-#define SPI_FLASH_DISABLE(__HANDLE__)              __HAL_SPI_DISABLE(__HANDLE__)
-#define SPI_FLASH_RCC_CLK_ENABLE()                 __HAL_RCC_SPI5_CLK_ENABLE()
-#define SPI_FLASH_RCC_CLK_DISABLE()                __HAL_RCC_SPI5_CLK_DISABLE()
+#define SPI_FLASH_ENABLE(__HANDLE__) __HAL_SPI_ENABLE(__HANDLE__)
+#define SPI_FLASH_DISABLE(__HANDLE__) __HAL_SPI_DISABLE(__HANDLE__)
+#define SPI_FLASH_RCC_CLK_ENABLE() __HAL_RCC_SPI5_CLK_ENABLE()
+#define SPI_FLASH_RCC_CLK_DISABLE() __HAL_RCC_SPI5_CLK_DISABLE()
 
-#define SPI_FLASH_GPIO_CLK_ENABLE()                __HAL_RCC_GPIOF_CLK_ENABLE()
-#define SPI_FLASH_CS_CLK_ENABLE()                  __HAL_RCC_GPIOF_CLK_ENABLE()
+#define SPI_FLASH_GPIO_CLK_ENABLE() __HAL_RCC_GPIOF_CLK_ENABLE()
+#define SPI_FLASH_CS_CLK_ENABLE() __HAL_RCC_GPIOF_CLK_ENABLE()
 
-#define SPI_FLASH_CS_ENABLE()                      HAL_GPIO_WritePin(SPI_FLASH_CS_PORT, SPI_FLASH_CS_PIN, GPIO_PIN_RESET)
-#define SPI_FLASH_CS_DISABLE()                     HAL_GPIO_WritePin(SPI_FLASH_CS_PORT, SPI_FLASH_CS_PIN, GPIO_PIN_SET)
+#define SPI_FLASH_CS_ENABLE() HAL_GPIO_WritePin(SPI_FLASH_CS_PORT, SPI_FLASH_CS_PIN, GPIO_PIN_RESET)
+#define SPI_FLASH_CS_DISABLE() HAL_GPIO_WritePin(SPI_FLASH_CS_PORT, SPI_FLASH_CS_PIN, GPIO_PIN_SET)
 
 #define CHECK_RET_RETURN(ret) \
-    do \
-    { \
-        if ((ret) < 0) \
-        { \
-            return ret; \
-        } \
+    do                        \
+    {                         \
+        if ((ret) < 0)        \
+        {                     \
+            return ret;       \
+        }                     \
     } while (0)
 
 SPI_HandleTypeDef g_spi_flash;
 
 /* This function is called by inner-HAL lib */
-void HAL_SPI_MspInit(SPI_HandleTypeDef* hspi)
+void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
 {
     GPIO_InitTypeDef GPIO_InitStruct;
 
@@ -121,7 +122,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* hspi)
 }
 
 /* This function is called by inner-HAL lib */
-void HAL_SPI_MspDeInit(SPI_HandleTypeDef* hspi)
+void HAL_SPI_MspDeInit(SPI_HandleTypeDef *hspi)
 {
     if (hspi->Instance == SPI_FLASH_PERIPHERAL)
     {
@@ -132,7 +133,7 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef* hspi)
     }
 }
 
-static int prv_spi_flash_send_byte(uint8_t send, uint8_t* recv)
+static int prv_spi_flash_send_byte(uint8_t send, uint8_t *recv) // spi 收发一个字节
 {
     uint8_t tmp;
     uint8_t t_send = send;
@@ -149,11 +150,13 @@ static int prv_spi_flash_send_byte(uint8_t send, uint8_t* recv)
     return 0;
 }
 
-static int prv_spi_flash_send_cmd(uint8_t cmd, uint32_t addr)
+static int prv_spi_flash_send_cmd(uint8_t cmd, uint32_t addr) // 改为4字节地址模式
 {
     int ret = 0;
 
     ret = prv_spi_flash_send_byte(cmd, NULL);
+    CHECK_RET_RETURN(ret);
+    ret = prv_spi_flash_send_byte((addr & 0xFF000000) >> CHOOSE_BIT_24, NULL);
     CHECK_RET_RETURN(ret);
     ret = prv_spi_flash_send_byte((addr & 0xFF0000) >> CHOOSE_BIT_16, NULL);
     CHECK_RET_RETURN(ret);
@@ -194,12 +197,12 @@ static void prv_spi_flash_wait_write_end(void)
     SPI_FLASH_CS_DISABLE();
 }
 
-static int prv_spi_flash_write_page(const uint8_t* buf, uint32_t addr, int32_t len)
+static int prv_spi_flash_write_page(const uint8_t *buf, uint32_t addr, int32_t len)
 {
     int ret = 0;
     int i;
 
-    if(0 == len)
+    if (0 == len)
     {
         return 0;
     }
@@ -240,8 +243,31 @@ static int prv_spi_flash_erase_sector(uint32_t addr)
 
     return ret;
 }
+/*
+void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
+{
+    GPIO_InitTypeDef GPIO_InitStruct;
 
-void hal_spi_flash_config(void)
+    if (hspi->Instance == SPI_FLASH_PERIPHERAL)
+    {
+        SPI_FLASH_RCC_CLK_ENABLE();
+        SPI_FLASH_GPIO_CLK_ENABLE();
+        SPI_FLASH_CS_CLK_ENABLE();
+
+        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+        GPIO_InitStruct.Pull = GPIO_NOPULL;
+        GPIO_InitStruct.Pin = SPI_FLASH_CS_PIN;
+        GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+        HAL_GPIO_Init(SPI_FLASH_CS_PORT, &GPIO_InitStruct);
+
+        GPIO_InitStruct.Pin = SPI_FLASH_SCK_PIN | SPI_FLASH_MOSI_PIN | SPI_FLASH_MISO_PIN;
+        GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+        GPIO_InitStruct.Alternate = SPI_FLASH_ALTERNATE;
+        HAL_GPIO_Init(SPI_FLASH_GPIO_PORT, &GPIO_InitStruct);
+    }
+} */
+
+void hal_spi_flash_config(void) // HAL_SPI_MspInit
 {
     g_spi_flash.Instance = SPI_FLASH_PERIPHERAL;
     g_spi_flash.State = HAL_SPI_STATE_RESET;
@@ -251,7 +277,7 @@ void hal_spi_flash_config(void)
     g_spi_flash.Init.CLKPolarity = SPI_POLARITY_HIGH;
     g_spi_flash.Init.CLKPhase = SPI_PHASE_2EDGE;
     g_spi_flash.Init.NSS = SPI_NSS_SOFT;
-    g_spi_flash.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+    g_spi_flash.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2; // bruce:SPI_BAUDRATEPRESCALER_256
     g_spi_flash.Init.FirstBit = SPI_FIRSTBIT_MSB;
     g_spi_flash.Init.TIMode = SPI_TIMODE_DISABLE;
     g_spi_flash.Init.CRCPolynomial = 7;
@@ -266,9 +292,7 @@ int hal_spi_flash_erase(uint32_t addr, int32_t len)
     uint32_t end;
     int i;
 
-    if (len < 0
-        || addr > SPI_FLASH_TOTAL_SIZE
-        || addr + len > SPI_FLASH_TOTAL_SIZE)
+    if (len < 0 || addr > SPI_FLASH_TOTAL_SIZE || addr + len > SPI_FLASH_TOTAL_SIZE)
     {
         return -1;
     }
@@ -287,9 +311,9 @@ int hal_spi_flash_erase(uint32_t addr, int32_t len)
     return 0;
 }
 
-int hal_spi_flash_write(const void* buf, int32_t len, uint32_t* location)
+int hal_spi_flash_write(const void *buf, int32_t len, uint32_t *location)
 {
-    const uint8_t* pbuf = (const uint8_t*)buf;
+    const uint8_t *pbuf = (const uint8_t *)buf;
     int page_cnt = 0;
     int remain_cnt = 0;
     int temp = 0;
@@ -299,11 +323,7 @@ int hal_spi_flash_write(const void* buf, int32_t len, uint32_t* location)
     int i;
     int ret = 0;
 
-    if (NULL == pbuf
-        || NULL == location
-        || len < 0
-        || *location > SPI_FLASH_TOTAL_SIZE
-        || len + *location > SPI_FLASH_TOTAL_SIZE)
+    if (NULL == pbuf || NULL == location || len < 0 || *location > SPI_FLASH_TOTAL_SIZE || len + *location > SPI_FLASH_TOTAL_SIZE)
     {
         return -1;
     }
@@ -383,7 +403,7 @@ int hal_spi_flash_write(const void* buf, int32_t len, uint32_t* location)
     return ret;
 }
 
-int hal_spi_flash_erase_write(const void* buf, int32_t len, uint32_t location)
+int hal_spi_flash_erase_write(const void *buf, int32_t len, uint32_t location)
 {
     int ret = 0;
 
@@ -394,16 +414,13 @@ int hal_spi_flash_erase_write(const void* buf, int32_t len, uint32_t location)
     return ret;
 }
 
-int hal_spi_flash_read(void* buf, int32_t len, uint32_t location)
+int hal_spi_flash_read(void *buf, int32_t len, uint32_t location)
 {
     int ret = 0;
     int i;
-    uint8_t* pbuf = (uint8_t*)buf;
+    uint8_t *pbuf = (uint8_t *)buf;
 
-    if (NULL == pbuf
-        || len < 0
-        || location > SPI_FLASH_TOTAL_SIZE
-        || len + location > SPI_FLASH_TOTAL_SIZE)
+    if (NULL == pbuf || len < 0 || location > SPI_FLASH_TOTAL_SIZE || len + location > SPI_FLASH_TOTAL_SIZE)
     {
         return -1;
     }
