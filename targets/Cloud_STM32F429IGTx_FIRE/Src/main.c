@@ -64,6 +64,6 @@ int main(void)
     if (uwRet != LOS_OK) {
         return LOS_NOK;
     }
-    LOS_Start();
+    LOS_Start(); //git test
     return 0;
 }
